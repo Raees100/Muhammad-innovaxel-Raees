@@ -28,3 +28,25 @@ def shorten_url():
         'original_url': original_url,
         'short_code': short_code
     }), 201
+
+@url_routes.route('/<short_code>', methods=['GET'])
+def redirect_to_original(short_code):
+    url = URL.query.filter_by(short_code=short_code).first()
+    if url:
+        url.clicks += 1
+        db.session.commit()
+        return redirect(url.original_url)
+    return jsonify({'error': 'Short URL not found'}), 404
+
+
+@url_routes.route('/stats/<short_code>', methods=['GET'])
+def get_url_stats(short_code):
+    url = URL.query.filter_by(short_code=short_code).first()
+    if url:
+        return jsonify({
+            'original_url': url.original_url,
+            'short_code': url.short_code,
+            'clicks': url.clicks,
+            'created_at': url.created_at.strftime('%Y-%m-%d %H:%M:%S')
+        })
+    return jsonify({'error': 'Short URL not found'}), 404
