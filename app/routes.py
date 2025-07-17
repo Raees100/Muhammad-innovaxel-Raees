@@ -50,3 +50,24 @@ def get_url_stats(short_code):
             'created_at': url.created_at.strftime('%Y-%m-%d %H:%M:%S')
         })
     return jsonify({'error': 'Short URL not found'}), 404
+
+@url_routes.route('/urls', methods=['GET'])
+def get_all_urls():
+    urls = URL.query.all()
+    return jsonify([{
+        'id': url.id,
+        'original_url': url.original_url,
+        'short_code': url.short_code,
+        'clicks': url.clicks,
+        'created_at': url.created_at.strftime('%Y-%m-%d %H:%M:%S')
+    } for url in urls])
+
+
+@url_routes.route('/delete/<short_code>', methods=['DELETE'])
+def delete_url(short_code):
+    url = URL.query.filter_by(short_code=short_code).first()
+    if url:
+        db.session.delete(url)
+        db.session.commit()
+        return jsonify({'message': f'Short URL {short_code} deleted'}), 200
+    return jsonify({'error': 'Short URL not found'}), 404
